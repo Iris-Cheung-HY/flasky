@@ -7,16 +7,19 @@ class Cat(db.Model):
     color: Mapped[str]
     personality: Mapped[str]
 
-# class Cat:
-#     def __init__(self, id, name, color, personality):
-#         self.id = id
-#         self.name = name
-#         self.color = color
-#         self.personality = personality
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "color": self.color,
+            "personality": self.personality
+        }
+
+    @classmethod
+    def from_dict(cls, cat_data):
+        return cls(name=cat_data["name"],
+                color=cat_data["color"],
+                personality=cat_data["personaluty"])
 
 
-# cats = [
-#     Cat(1, "luna", "grey", "naughty"),
-#     Cat(2, "Morty", "orange", "orange"),
-#     Cat(3, "Mimi", "grey", "chill"),
-#     Cat(4, "Binx", "black", "hungry")
