@@ -20,6 +20,6 @@ class Cat(db.Model):
     def from_dict(cls, cat_data):
         return cls(name=cat_data["name"],
                 color=cat_data["color"],
-                personality=cat_data["personaluty"])
+                personality=cat_data["personality"])
 
 

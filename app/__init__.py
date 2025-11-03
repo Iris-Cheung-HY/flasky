@@ -1,7 +1,7 @@
 from flask import Flask
 from .db import db, migrate
 from .models.cat import Cat
-from .routes.cat_routes import cats_bp
+from .routes.cat_routes import bp as cats_bp
 import os
 
 def create_app(config=None):
@@ -9,7 +9,7 @@ def create_app(config=None):
     app = Flask(__name__)
 
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI')
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URL')
 
     if config:
         app.config.update(config)
