@@ -1,7 +1,6 @@
-from flask import Blueprint, abort, make_response, request, Response
+from flask import abort, Blueprint, make_response, request, Response
 from ..models.cat import Cat
 from ..db import db
-# from app.models.cat import cats
 
 cats_bp = Blueprint("cat_bp", __name__, url_prefix="/cats")
 
@@ -17,119 +16,73 @@ def create_cat():
         color=color,
         personality=personality
     )
-
     db.session.add(new_cat)
     db.session.commit()
 
-    cat_response = dict(
-        id=new_cat.id,
-        name=new_cat.name,
-        color=new_cat.color,
-        personality=new_cat.personality
-    )
+    return new_cat.to_dict, 201
 
-    return cat_response
 
 @cats_bp.get("")
 def get_all_cats():
-    query = db.select(Cat).order_by(Cat,id)
+    query = db.select(Cat)
+
+    name_param = request.args.get("name")
+    if name_param:
+        query = query.where(Cat.name == name_param)
+    
+    color_param = request.args.get("color")
+    if color_param:
+        query = query.where(Cat.color.ilike(f"%{color_param}%"))
+
+    query = query.order_by(Cat.id)
+
     cats = db.session.scalars(query)
+
     result_list = []
 
     for cat in cats:
-        result_list.append(dict(
-            id=cat.id,
-            name=cat.name,
-            color=cat.color,
-            personality=cat.personality
-        ))
+        result_list.append(cat.to_dict())
     return result_list
 
 @cats_bp.get("/<id>")
 def get_single_cat(id):
     cat = validate_cat(id)
-    cat_dict = dict(
-        id=cat.id,
-        name=cat.name,
-        color=cat.color,
-        personality=cat.personality
-    )
+
+    return cat.to_dict()
 
 def validate_cat(id):
     try:
         id = int(id)
     except ValueError:
-        invalid = {"message": f"Cat id {id} is invalid."}
+        invalid = {"message": f"Cat id ({id}) is invalid."}
         abort(make_response(invalid, 400))
-    
+
     query = db.select(Cat).where(Cat.id == id)
     cat = db.session.scalar(query)
-    if not cat:
-        not_found = {"message": f"Cat with id {id} not found."}
+    if not cat:    
+        not_found = {"message": f"Cat with id ({id}) not found."}
         abort(make_response(not_found, 404))
-    
+
     return cat
 
 @cats_bp.put("/<id>")
 def replace_cat(id):
     cat = validate_cat(id)
+
     request_body = request.get_json()
     cat.name = request_body["name"]
     cat.color = request_body["color"]
     cat.personality = request_body["personality"]
-    
+
     db.session.commit()
+
     return Response(status=204, mimetype="application/json")
 
 @cats_bp.delete("/<id>")
-def delect_cat(id):
+def delete_cat(id):
     cat = validate_cat(id)
+
     db.session.delete(cat)
     db.session.commit()
+
     return Response(status=204, mimetype="application/json")
-
-
-
-
-
-
-
-
-# @cats_bp.get("")
-# def get_all_cats():
-#     result_list = []
-
-#     for cat in cats:
-#         result_list.append(dict(
-#             id=cat.id,
-#             name=cat.name,
-#             color=cat.color,
-#             personality=cat.personality
-#         ))
-#     return result_list
-
-# @cats_bp.get("/<id>")
-# def get_single_cat(id):
-#     cat = validate_cat(id)
-#     cat_dict = dict(
-#         id=cat.id,
-#         name=cat.name,
-#         color=cat.color,
-#         personality=cat.personality
-#     )
-#     return cat_dict
-        
-
-# def validate_cat(id):
-#     try:
-#         id = int(id)
-#     except ValueError:
-#         invalid = {"message": f"Cat id {id} is invalid."}
-
-#         abort(make_response(invalid, 400))
-    
-#     for cat in cats:
-#         if cat.id == id:
-#             return cat
-#     not_found = ("message": f"Cat with id {id} not found.")
-#     abort(make_response(not_found, 404))
